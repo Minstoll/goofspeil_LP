@@ -1,82 +1,61 @@
 import numpy as np
 import nashpy as nash
+from functools import lru_cache
+import time
 
 def solveLP(A):
     global turn
     game = nash.Game(A)
     arr = game.linear_program()
-    (x, _) = A.shape
-    sum = 0
-    for i in range(x):
-        for j in range(x):
-            sum += arr[0][i]*arr[1][j]*A[i][j]
+    payoff = np.dot(np.dot(arr[0], A), arr[1])
     turn = arr
-    return sum
+    return payoff
 
-def sign(x):
-    if x > 0:
-        return 1
-    if x == 0:
-        return 0
-    return -1
-
-#for k = -1 general f(v, y, p)
+# for k = -1 general f(v, y, p)
+@lru_cache(maxsize=None)
 def f(v, y, p, k):
-    global prev
-
-    if (tuple(v), tuple(y), tuple(p), k) in prev:
-        return prev[(tuple(v), tuple(y), tuple(p), k)]
-
-    if len(p) == 1:
-        if v[0] > y[0]:
-            return p[0]
-        if v[0] == y[0]:
-            return 0
-        return -p[0]
 
     if k == -1:
         sum = 0
-        for i in range(len(p)):
+        n = len(p)
+        for i in range(n):
             sum += f(v, y, p, i)
-        return sum / len(p)
+        return sum / n
+    
+    if len(p) == 1:
+        return np.sign(v[0] - y[0]) * p[0]
     
     if len(p) == 2:
-        if k == 0:
-            a = sign(v[0] - y[0]) * p[0] + sign(v[1] - y[1]) * p[1]
-            b = sign(v[1] - y[0]) * p[0] + sign(v[0] - y[1]) * p[1]
-            c = sign(v[0] - y[1]) * p[0] + sign(v[1] - y[0]) * p[1]
-            d = sign(v[1] - y[1]) * p[0] + sign(v[0] - y[0]) * p[1]
-            A = np.array([[a, b], [c, d]])
-            prev[(tuple(v), tuple(y), tuple(p), k)] = solveLP(A)
-            return solveLP(A)
-        a = sign(v[0] - y[0]) * p[1] + sign(v[1] - y[1]) * p[0]
-        b = sign(v[1] - y[0]) * p[1] + sign(v[0] - y[1]) * p[0]
-        c = sign(v[0] - y[1]) * p[1] + sign(v[1] - y[0]) * p[0]
-        d = sign(v[1] - y[1]) * p[1] + sign(v[0] - y[0]) * p[0]
+        r = 0 if k == 0 else 1
+        s = (r + 1) % 2
+        a = np.sign(v[0] - y[0]) * p[r] + np.sign(v[1] - y[1]) * p[s]
+        b = np.sign(v[1] - y[0]) * p[r] + np.sign(v[0] - y[1]) * p[s]
+        c = np.sign(v[0] - y[1]) * p[r] + np.sign(v[1] - y[0]) * p[s]
+        d = np.sign(v[1] - y[1]) * p[r] + np.sign(v[0] - y[0]) * p[s]
         A = np.array([[a, b], [c, d]])
-        prev[(tuple(v), tuple(y), tuple(p), k)] = solveLP(A)
         return solveLP(A)
 
-    A = np.zeros((len(v), len(v)))
-    for i in range(len(v)):
-        for j in range(len(v)):
-            v1 = v.copy()
-            y1 = y.copy()
-            p1 = p.copy()
+    m = len(v)
+    A = np.zeros((m, m))
+    for i in range(m):
+        for j in range(m):
+            v1, y1, p1 = list(v), list(y), list(p)
             del v1[i]
             del y1[j]
             del p1[k]
-            A[i][j] = p[k]*sign(v[i] - y[j]) + f(v1, y1, p1, -1)
-    prev[(tuple(v), tuple(y), tuple(p), k)] = solveLP(A)
+            A[i][j] = p[k]*np.sign(v[i] - y[j]) \
+                + f(tuple(v1), tuple(y1), tuple(p1), -1)
     return solveLP(A)
 
-turn = 0
-
-prev = {}
+turn = None
 
 def main():
-    print(f([1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], 3))
+    start = time.time()
+    print(f((1, 2, 3, 4, 5), (1, 2, 3, 4, 5), (1, 2, 3, 4, 5), 3))
     print(turn)
+    end = time.time()
+    print(end - start)
+
 
 if __name__ == "__main__":
     main()
