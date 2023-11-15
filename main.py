@@ -24,16 +24,6 @@ def f(v, y, p, k):
     
     if len(p) == 1:
         return np.sign(v[0] - y[0]) * p[0]
-    
-    if len(p) == 2:
-        r = 0 if k == 0 else 1
-        s = (r + 1) % 2
-        a = np.sign(v[0] - y[0]) * p[r] + np.sign(v[1] - y[1]) * p[s]
-        b = np.sign(v[1] - y[0]) * p[r] + np.sign(v[0] - y[1]) * p[s]
-        c = np.sign(v[0] - y[1]) * p[r] + np.sign(v[1] - y[0]) * p[s]
-        d = np.sign(v[1] - y[1]) * p[r] + np.sign(v[0] - y[0]) * p[s]
-        A = np.array([[a, b], [c, d]])
-        return solveLP(A)
 
     m = len(v)
     A = np.zeros((m, m))
@@ -51,7 +41,7 @@ turn = None
 
 def main():
     start = time.time()
-    print(f((1, 2, 3, 4, 5), (1, 2, 3, 4, 5), (1, 2, 3, 4, 5), 3))
+    print(f((1, 2, 3, 4, 5), (1, 2, 3, 4, 5), (1, 2, 3, 4, 5), 0))
     print(turn)
     end = time.time()
     print(end - start)
