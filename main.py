@@ -41,11 +41,13 @@ turn = None
 
 def main():
     start = time.time()
-    print(f((1, 2, 3, 4, 5), (1, 2, 3, 4, 5), (1, 2, 3, 4, 5), 0))
+    print(f((3, 4), (2, 3), (3, 4), 1))
+
     print(turn)
     end = time.time()
     print(end - start)
 
+#f((1, 2, 3, 4), (1, 2, 3, 4), (1, 2, 3, 4), 2)
 
 if __name__ == "__main__":
     main()
